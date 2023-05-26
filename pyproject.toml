@@ -36,7 +36,7 @@ dependencies = [
     "scipy>=1.5.0",
     "sparse",
 ]
-version = "0.1"
+dynamic = ["version"]
 
 [project.urls]
 "Homepage" = "https://hyperspy.org/rosettasciio"
@@ -55,6 +55,20 @@ usid = ["pyUSID"]
 zspy = ["zarr"]
 tests = ["pytest>=3.6", "pytest-xdist", "pytest-rerunfailures", "pytest-cov"]
 docs = ["pydata-sphinx-theme>=0.13", "sphinxcontrib-towncrier", "towncrier"]
+all = [
+    "rosettasciio[blockfile]",
+    "rosettasciio[mrcz]",
+    "rosettasciio[scalebar_export]",
+    "rosettasciio[tiff]",
+    "rosettasciio[usid]",
+    "rosettasciio[zspy]",
+]
+dev = [
+    "black",
+    "rosettasciio[docs]",
+    "rosettasciio[all]",
+    "rosettasciio[tests]"
+]
 
 [tool.pytest.ini_options]
 # Note we may need to use `-n 2` argument for pytest-xdist on CI
@@ -65,8 +79,13 @@ testpaths = [
   "rsciio/tests",
 ]
 
-[tool.setuptools]
-packages = ["rsciio"]
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+version = {attr = "rsciio.version.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["rsciio*"]
+exclude = ["rsciio.tests.data*"]
 
 [tool.towncrier]
 package = "rsciio"
