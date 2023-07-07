@@ -50,7 +50,7 @@ import warnings
 # DictionaryTreeBrowser class handles the fancy metadata dictionnaries
 # from hyperspy.misc.utils import DictionaryTreeBrowser
 
-from rsciio._docstrings import FILENAME_DOC, LAZY_DOC, RETURNS_DOC
+from rsciio._docstrings import FILENAME_DOC, LAZY_UNSUPPORTED_DOC, RETURNS_DOC
 from rsciio.utils.exceptions import MountainsMapFileError
 
 _logger = logging.getLogger(__name__)
@@ -1386,17 +1386,18 @@ class DigitalSurfHandler(object):
         self._set_str(file, val, datasize)
 
 
-def file_reader(filename, **kwds):
-    """Read a mountainsmap .sur file and return a dictionnary containing the
-    information necessary for creating the data object.
+def file_reader(filename, lazy=False):
+    """
+    Read a mountainsmap ``.sur`` file.
+
     Parameters
     ----------
     %s
     %s
-
     %s
     """
-
+    if lazy is not False:
+        raise NotImplementedError("Lazy loading is not supported.")
     ds = DigitalSurfHandler(filename)
 
     ds._read_sur_file()
@@ -1408,4 +1409,4 @@ def file_reader(filename, **kwds):
     ]
 
 
-file_reader.__doc__ %= (FILENAME_DOC, LAZY_DOC, RETURNS_DOC)
+file_reader.__doc__ %= (FILENAME_DOC, LAZY_UNSUPPORTED_DOC, RETURNS_DOC)
