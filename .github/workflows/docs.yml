@@ -64,7 +64,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd docs
-          make html -W --keep-going
+          make SPHINXOPTS="-W --keep-going" html
 
       - uses: actions/upload-artifact@v3
         with:
