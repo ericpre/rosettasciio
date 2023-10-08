@@ -72,7 +72,9 @@ class HyperspyWriter(HierarchicalWriter):
     @staticmethod
     def _store_data(data, dset, group, key, chunks):
         if isinstance(data, da.Array):
-            if data.chunks != dset.chunks:
+            if chunks != dset.chunks:
+                data = data.rechunk(dset.chunks)
+            elif data.chunks != dset.chunks:
                 data = data.rechunk(dset.chunks)
             da.store(data, dset)
         elif data.flags.c_contiguous:

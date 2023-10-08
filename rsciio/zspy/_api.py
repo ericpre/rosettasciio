@@ -111,7 +111,9 @@ class ZspyWriter(HierarchicalWriter):
     def _store_data(data, dset, group, key, chunks):
         """Write data to zarr format."""
         if isinstance(data, da.Array):
-            if data.chunks != dset.chunks:
+            if chunks != dset.chunks:
+                data = data.rechunk(dset.chunks)
+            elif data.chunks != dset.chunks:
                 data = data.rechunk(dset.chunks)
             # lock=False is necessary with the distributed scheduler
             data.store(dset, lock=False)
