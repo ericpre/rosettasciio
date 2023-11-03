@@ -47,7 +47,7 @@ jobs:
         run: |
           git remote add upstream https://github.com/hyperspy/rosettasciio.git
           git fetch --prune --unshallow
-          git fetch --depth=1 upstream --tags
+          git fetch --depth=1 upstream +refs/tags/*:refs/tags/*
 
       - uses: actions/setup-python@v4
         name: Install Python
