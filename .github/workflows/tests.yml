@@ -40,10 +40,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Needs the tags to get the correct version with setuptools_scm
-          fetch-depth: 1
-          fetch-tags: true
+
+      - name: Fetch tags upstream
+        # Needs to fetch the tags from upstream to get the
+        # correct version with setuptools_scm
+        run: |
+          git remote add upstream https://github.com/hyperspy/rosettasciio.git
+          git fetch --prune --unshallow
+          git fetch --depth=1 upstream --tags
 
       - uses: actions/setup-python@v4
         name: Install Python
