@@ -40,6 +40,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Needs the tags to get the correct version with setuptools_scm
+          fetch-depth: 1
+          fetch-tags: true
 
       - uses: actions/setup-python@v4
         name: Install Python
