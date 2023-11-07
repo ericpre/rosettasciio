@@ -15,6 +15,7 @@ jobs:
         os: [ubuntu, windows, macos]
         PYTHON_VERSION: ['3.9', '3.10']
         LABEL: ['']
+        MINIFORGE_VARIANT: ['Mambaforge']
         include:
           # test oldest supported version of main dependencies on python 3.8
           - os: ubuntu
@@ -37,6 +38,10 @@ jobs:
             PYTHON_VERSION: '3.8'
           - os: ubuntu
             PYTHON_VERSION: '3.11'
+          - os: ubuntu
+            PYTHON_VERSION: '3.9'
+            MINIFORGE_VARIANT: 'Mambaforge-pypy3'
+            LABEL: '-pypy-minimum-without-hyperspy'
 
     steps:
       - uses: actions/checkout@v4
@@ -49,14 +54,16 @@ jobs:
           git fetch --prune --unshallow
           git fetch upstream --tags
 
-      - uses: actions/setup-python@v4
-        name: Install Python
+      - uses: conda-incubator/setup-miniconda@v2
         with:
+          miniforge-variant: Mambaforge-pypy3
+          channels: conda-forge
+          channel-priority: strict
           python-version: ${{ matrix.PYTHON_VERSION }}
 
       - name: Set Environment Variable
-        shell: bash
         # Set PIP_SELECTOR environment variable according to matrix.LABEL
+        shell: bash -el {0}
         run: |
           if [[ -n "${{ matrix.LABEL }}" && "${{ matrix.LABEL }}" == *"minimum"* ]]; then
             PIP_SELECTOR="[tests]"
@@ -66,36 +73,42 @@ jobs:
           echo "PIP_SELECTOR=${PIP_SELECTOR}" >> $GITHUB_ENV
 
       - name: Display version
+        shell: bash -el {0}
         run: |
           python --version
           pip --version
 
       - name: Install oldest supported version
         if: contains(matrix.LABEL, 'oldest')
+        shell: bash -el {0}
         run: |
           pip install ${{ matrix.DEPENDENCIES }}
 
       - name: Install (HyperSpy dev)
         if: ${{ ! contains(matrix.LABEL, 'without-hyperspy') }}
         # Need to install hyperspy dev until hyperspy 2.0 is released
+        shell: bash -el {0}
         run: |
           pip install https://github.com/hyperspy/hyperspy/archive/RELEASE_next_major.zip
 
       - name: Install (exspy)
         if: ${{ ! contains(matrix.LABEL, '-minimum') && ! contains(matrix.LABEL, 'without-hyperspy') }}
+        shell: bash -el {0}
         run: |
           pip install https://github.com/hyperspy/exspy/archive/main.zip
 
       - name: Install
-        shell: bash
+        shell: bash -el {0}
         run: |
           pip install --upgrade -e .'${{ env.PIP_SELECTOR }}'
 
-      - name: Pip list
+      - name: Conda list
+        shell: bash -el {0}
         run: |
-          pip list
+          conda list
 
       - name: Run test suite
+        shell: bash -el {0}
         run: |
           pytest --pyargs rsciio --reruns 3 -n 2 --cov=. --cov-report=xml
 
