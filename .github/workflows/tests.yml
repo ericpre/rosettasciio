@@ -61,6 +61,12 @@ jobs:
           channel-priority: strict
           python-version: ${{ matrix.PYTHON_VERSION }}
 
+      - name: Setup pypy
+        if: contains(matrix.LABEL, 'pypy')
+        shell: bash -el {0}
+        run: |
+          conda install pypy python=${{ matrix.PYTHON_VERSION }} numpy
+
       - name: Set Environment Variable
         # Set PIP_SELECTOR environment variable according to matrix.LABEL
         shell: bash -el {0}
