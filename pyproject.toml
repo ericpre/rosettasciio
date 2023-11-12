@@ -64,7 +64,7 @@ tests = [
   "pytest-cov",
   "setuptools_scm",
 ]
-docs = [
+doc = [
   "numpydoc",
   "pooch",
   "pydata-sphinx-theme>=0.13",
@@ -87,7 +87,7 @@ all = [
 ]
 dev = [
   "black",
-  "rosettasciio[docs]",
+  "rosettasciio[doc]",
   "rosettasciio[all]",
   "rosettasciio[tests]"
 ]
