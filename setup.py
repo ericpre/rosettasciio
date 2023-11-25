@@ -141,9 +141,20 @@ class Recythonize(Command):
         cythonize(extensions, language_level="3")
 
 
+def parse_fetch_on_shallow(*args, **kwargs):
+    from setuptools_scm.git import parse, fetch_on_shallow
+
+    kwargs["pre_parse"] = fetch_on_shallow
+    return parse(*args, **kwargs)
+
+
 setup(
     ext_modules=extensions,
     cmdclass={
         "recythonize": Recythonize,
+    },
+    use_scm_version={
+        "parse": parse_fetch_on_shallow,
+        "fallback_version": "0.0+UNKNOWN",
     },
 )

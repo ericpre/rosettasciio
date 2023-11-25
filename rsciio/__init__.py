@@ -30,9 +30,10 @@ __version__ = version("rosettasciio")
 
 # For development version, `setuptools_scm` will be used at
 # build time to get the dev version:
-# - in case of missing vcs information, it will fallback to the
-#   version defined in pyproject.toml will be used
-# - in case of shallow checkout (pip install git+https://...)
+# - in case of missing vcs information, it will fallback to "0.0+UNKNOWN"
+#   as defined in `setup.py`
+# - in case of shallow checkout (pip install git+https://...), a custom
+#   parser defined in `setup.py` will "unshallow" the repository.
 
 # if we have a editable install from a git repository try to use
 # `setuptools_scm` to find a more accurate version:
