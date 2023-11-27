@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import re
 import os
 import subprocess
 
@@ -13,15 +14,19 @@ def run_towncrier(tag):
 
 
 def update_fallback_version_in_pyproject(tag, fname="pyproject.toml"):
-    pyproject = toml.load(fname)
-    version = tag.strip("v").split(".")
-    # Default to +1 on minor version
-    major, minor = version[0], int(version[1]) + 1
+    with open(fname, "r") as file:
+        lines = file.readlines()
 
-    pyproject["tool"]["setuptools_scm"]["fallback_version"] = f"{major}.{minor}.dev0"
+    pattern = "fallback_version"
+    # Iterate through the lines and find the pattern
+    for i, line in enumerate(lines):
+        if re.search(pattern, line):
+            lines[i] = f"{pattern} = {tag}.dev0\n"
+            break
 
-    with open(fname, "w") as f:
-        toml.dump(pyproject, f)
+    # Write the updated content back to the file
+    with open(fname, "w") as file:
+        file.writelines(lines)
 
 
 if __name__ == "__main__":
