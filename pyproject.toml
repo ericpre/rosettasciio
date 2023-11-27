@@ -112,9 +112,9 @@ include = ["rsciio*"]
 [tool.setuptools.package-data]
 "rsciio" = ["*test_compilers.c", "*.yaml", "*registry.txt"]
 
-# [tool.setuptools_scm]
+[tool.setuptools_scm]
 # Presence enables setuptools_scm, the version will be determine at build time from git
-# custom parse function define in setup.py
+fallback_version = "0.3.dev0"
 
 [tool.towncrier]
 package = "rsciio"
