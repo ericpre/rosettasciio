@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with RosettaSciIO. If not, see <https://www.gnu.org/licenses/#GPL>.
 
+import logging
 from pathlib import Path
 import sys
 import warnings
@@ -23,6 +24,8 @@ import warnings
 import pooch
 
 PATH = Path(__file__).parent
+
+_logger = logging.getLogger(__name__)
 
 
 def update_registry():
@@ -130,22 +133,30 @@ def download_all(pooch_object=None, ignore_hash=None, show_progressbar=True):
         for key in pooch_object.registry.keys():
             pooch_object.registry[key] = None
 
+    files_number = len(pooch_object.registry_files)
     if show_progressbar:
         try:
             from tqdm import tqdm
 
-            pbar = tqdm(total=len(pooch_object.registry_files))
+            pbar = tqdm(total=files_number)
         except ImportError:
-            print("Using progresbar requires the `tqdm` library.")
+            _logger.warning("Using progresbar requires the `tqdm` library.")
             show_progressbar = False
+
+    pooch_logger = pooch.get_logger()
+    pooch_logger_oldlevel = pooch_logger.level
+    pooch_logger.setLevel("WARNING")
 
     for i, file in enumerate(pooch_object.registry_files):
         pooch_object.fetch(file, progressbar=False)
-        if show_progressbar:
+        # Display 10 increments only
+        if show_progressbar and i % int(files_number / 10) == 0:
             pbar.update(i)
 
     if show_progressbar:
         pbar.close()
+
+    pooch_logger.setLevel(pooch_logger_oldlevel)
 
 
 if __name__ == "__main__":
