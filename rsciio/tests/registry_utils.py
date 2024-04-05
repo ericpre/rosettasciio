@@ -147,11 +147,10 @@ def download_all(pooch_object=None, ignore_hash=None, show_progressbar=True):
     pooch_logger_oldlevel = pooch_logger.level
     pooch_logger.setLevel("WARNING")
 
-    for i, file in enumerate(pooch_object.registry_files):
+    for file in pooch_object.registry_files:
         pooch_object.fetch(file, progressbar=False)
-        # Display 10 increments only
         if show_progressbar:
-            pbar.update(i)
+            pbar.update()
 
     if show_progressbar:
         pbar.close()
