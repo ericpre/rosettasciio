@@ -150,7 +150,7 @@ def download_all(pooch_object=None, ignore_hash=None, show_progressbar=True):
     for i, file in enumerate(pooch_object.registry_files):
         pooch_object.fetch(file, progressbar=False)
         # Display 10 increments only
-        if show_progressbar and i % int(files_number / 10) == 0:
+        if show_progressbar:
             pbar.update(i)
 
     if show_progressbar:
