@@ -14,3 +14,5 @@ jobs:
       POOCH_BASE_URL: https://github.com/${{ github.event.pull_request.head.repo.full_name || github.repository }}/raw/${{ github.event.pull_request.head.ref || github.ref_name }}/rsciio/tests/data/
       # "-s" is used to show of output when downloading the test files
       PYTEST_ARGS: "-n 2"
+      # hyperspy is not defined in tests dependency, add it here
+      ADDITIONAL_TEST_DEPENDENCIES: "hyperspy"
