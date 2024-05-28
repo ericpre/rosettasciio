@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with RosettaSciIO. If not, see <https://www.gnu.org/licenses/#GPL>.
 
-
 import gc
 from pathlib import Path
 
@@ -264,20 +263,18 @@ def test_get_frame_record_dtype(sig, fake_signals, extra_bytes):
     assert dt_fh.itemsize == total_size
 
 
-@pytest.mark.parametrize(
-    "filename",
-    [
-        pytest.param("foo_000.bla", marks=pytest.mark.xfail(raises=ValueError)),
-        pytest.param("foo_0.tvips", marks=pytest.mark.xfail(raises=ValueError)),
-        pytest.param("foo_001.tvips", marks=pytest.mark.xfail(raises=ValueError)),
-        pytest.param("foo_0000.TVIPS", marks=pytest.mark.xfail(raises=ValueError)),
-        ("foo_000.tvips"),
-        ("foo_000.TVIPS"),
-    ],
-)
+@pytest.mark.parametrize("filename", ["foo_000.tvips", "foo_000.TVIPS"])
 def test_valid_tvips_file(filename):
     isvalid = _is_valid_first_tvips_file(filename)
     assert isvalid
+
+
+@pytest.mark.parametrize(
+    "filename", ["foo_000.bla", "foo_0.tvips", "foo_001.tvips", "foo_0000.TVIPS"]
+)
+def test_valid_tvips_file_fail(filename):
+    with pytest.raises(ValueError):
+        _is_valid_first_tvips_file(filename)
 
 
 @pytest.mark.parametrize(
@@ -395,29 +392,28 @@ def test_tvips_file_reader(filename, lazy, kwargs, wsa):
     assert np.allclose(signal_test.data, signal.data)
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_read_fail_version():
-    hs.load(TEST_DATA_PATH / "test_tvips_2345_split_000.tvips", scan_shape="auto")
-
-
-@pytest.mark.xfail(raises=ValueError)
 def test_read_fail_wind_axis():
-    hs.load(
-        TEST_DATA_PATH / "test_tvips_2345_split_000.tvips",
-        scan_shape=(2, 3),
-        winding_scan_axis="z",
-    )
+    with pytest.raises(ValueError):
+        hs.load(
+            TEST_DATA_PATH / "test_tvips_2345_split_000.tvips",
+            scan_shape=(2, 3),
+            winding_scan_axis="z",
+        )
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_read_fail_scan_shape():
-    hs.load(TEST_DATA_PATH / "test_tvips_2345_split_000.tvips", scan_shape=(3, 3))
+    with pytest.raises(ValueError):
+        hs.load(TEST_DATA_PATH / "test_tvips_2345_split_000.tvips", scan_shape="auto")
+    with pytest.raises(ValueError):
+        hs.load(TEST_DATA_PATH / "test_tvips_2345_split_000.tvips", scan_shape=(3, 3))
+    # correct shape
+    hs.load(TEST_DATA_PATH / "test_tvips_2345_split_000.tvips", scan_shape=(2, 2))
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_write_fail_signal_type(tmp_path):
-    fake_signal = hs.signals.BaseSignal(np.zeros((1, 2, 3, 4)))
-    fake_signal.save(tmp_path / "test_000.tvips")
+def test_write_failure_Signal1D(tmp_path):
+    with pytest.raises(ValueError):
+        s = hs.signals.BaseSignal(np.zeros((1, 2, 3, 4)))
+        s.save(tmp_path / "test_000.tvips")
 
 
 @pytest.mark.parametrize(
@@ -445,12 +441,20 @@ def test_file_writer(
 
     filepath = tmp_path / "test_tvips_save_000.tvips"
     scan_shape = signal.axes_manager.navigation_shape
-    file_writer(
-        filepath,
-        signal._to_dictionary(),
-        max_file_size=max_file_size,
-        frame_header_extra_bytes=fheb,
-    )
+
+    if max_file_size == 100:
+        # catch warning with minimum file size
+        cm = pytest.warns(UserWarning)
+    else:
+        cm = dummy_context_manager()
+    with cm:
+        file_writer(
+            filepath,
+            signal._to_dictionary(),
+            max_file_size=max_file_size,
+            frame_header_extra_bytes=fheb,
+        )
+
     if max_file_size is None:
         assert len(list(tmp_path.iterdir())) == 1
     else:
@@ -471,10 +475,3 @@ def test_file_writer(
             == metadata.Acquisition_instrument.TEM.beam_current
         )
     gc.collect()
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_file_writer_fail(tmp_path):
-    signal = hs.signals.Signal1D(np.array([1, 2, 3]))
-
-    file_writer(str(tmp_path / "test.tvips"), signal._to_dictionary())
