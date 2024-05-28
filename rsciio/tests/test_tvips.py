@@ -66,7 +66,7 @@ def fake_metadata_diffraction():
         "General": {
             "date": "1993-06-18",
             "time": "12:34:56",
-            "time_zone": "CET",
+            "time_zone": "CEST",
         },
     }
     return DictionaryTreeBrowser(metadata)
@@ -85,7 +85,7 @@ def fake_metadata_imaging():
         "General": {
             "date": "1993-06-18",
             "time": "12:34:56",
-            "time_zone": "CET",
+            "time_zone": "CEST",
         },
     }
     return DictionaryTreeBrowser(metadata)
@@ -105,7 +105,7 @@ def fake_metadata_confused():
         "General": {
             "date": "1993-06-18",
             "time": "12:34:56",
-            "time_zone": "CET",
+            "time_zone": "CEST",
         },
     }
     return DictionaryTreeBrowser(metadata)
@@ -466,6 +466,7 @@ def test_file_writer(
     if metadata and meta is not None:
         assert dtc["metadata"]["General"]["date"] == metadata.General.date
         assert dtc["metadata"]["General"]["time"] == metadata.General.time
+        assert dtc["metadata"]["General"]["time_zone"] == "UTC"
         assert (
             dtc["metadata"]["Acquisition_instrument"]["TEM"]["beam_energy"]
             == metadata.Acquisition_instrument.TEM.beam_energy
