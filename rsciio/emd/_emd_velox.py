@@ -851,11 +851,14 @@ class FeiEMDReader(object):
         return mapping
 
     def _convert_element_list(self, d):
-        atomic_number_list = d[d.keys()[0]]["elementSelection"]
-        return [
-            atomic_number2name[int(atomic_number)]
-            for atomic_number in atomic_number_list
-        ]
+        d = d[d.keys()[0]]
+        # Key is not present when no elements has been selected in velox
+        if "elementSelection" in d.keys():
+            atomic_number_list = d["elementSelection"]
+            return [
+                atomic_number2name[int(atomic_number)]
+                for atomic_number in atomic_number_list
+            ]
 
     def _convert_datetime(self, unix_time):
         # Since we don't know the actual time zone of where the data have been

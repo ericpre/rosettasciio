@@ -536,3 +536,27 @@ class TestVeloxEMDv11:
             _ = hs.load(self.fei_files_path / "Test SI 16x16 ReducedData 215 kx.emd")
 
         assert "No spectrum stream is present" in caplog.text
+
+
+class TestVeloxEMDv11EmptyElementSelection:
+    fei_files_path = TEST_DATA_PATH / "velox_SI_empty_selection"
+
+    @classmethod
+    def setup_class(cls):
+        import zipfile
+
+        zipf = TEST_DATA_PATH / "velox_SI_empty_selection.zip"
+        with zipfile.ZipFile(zipf, "r") as zipped:
+            zipped.extractall(cls.fei_files_path)
+
+    @classmethod
+    def teardown_class(cls):
+        gc.collect()
+        shutil.rmtree(cls.fei_files_path)
+
+    def test_parsing_elements_missing(self):
+        # The elements to parsed in EDS data will be present
+        # only when selected
+        s = hs.load(self.fei_files_path / "SI_empty selection.emd")
+        assert len(s) == 6
+        assert s[-1].metadata.get_item("Sample") is None
