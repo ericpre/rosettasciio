@@ -122,7 +122,7 @@ jobs:
         # for numpy 2.0 support for python >= 3.9
         # https://github.com/em-MRCZ/python-mrcz/pull/15
         # https://github.com/hgrecco/pint/issues/1974
-        if: ${{ ! contains(matrix.LABEL, 'oldest') && matrix.PYTHON_VERSION != '3.8' }}
+        if: ${{ matrix.PYTHON_VERSION != '3.8' || ! contains(matrix.LABEL, 'oldest') }}
         run: |
           pip install git+https://github.com/ericpre/python-mrcz.git@numpy2.0_and_deprecation_fixes
           pip install git+https://github.com/hgrecco/pint
@@ -134,12 +134,12 @@ jobs:
 
       - name: Uninstall pyUSID
         # remove when pyUSID supports numpy 2 
-        if: ${{ ! contains(matrix.LABEL, 'minimum') }}
+        if: ${{ ! contains(matrix.LABEL, 'oldest') || matrix.PYTHON_VERSION != '3.8' }}
         run: |
           pip uninstall -y pyUSID
 
       - name: Install numpy 2.0 
-        if: ${{ ! contains(matrix.LABEL, 'oldest') && matrix.PYTHON_VERSION != '3.8' }}
+        if: ${{ ! contains(matrix.LABEL, 'oldest') || matrix.PYTHON_VERSION != '3.8' }}
         run: |
           pip install numpy==2
 
