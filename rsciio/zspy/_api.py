@@ -24,6 +24,7 @@ import numcodecs
 import numpy as np
 import zarr
 from dask.diagnostics import ProgressBar
+from packaging.version import Version
 
 from rsciio._docstrings import (
     CHUNKS_DOC,
@@ -183,7 +184,7 @@ def file_writer(
         If None, use a Blosc compressor.
     close_file : bool, default=True
         Close the file after writing. Only relevant for some zarr storages
-        (:py:class:`zarr.storage.ZipStore`, :py:class:`zarr.storage.DBMStore`)
+        (:py:class:`zarr.storage.ZipStore`, :py:class:`zarr.storage.RemoteStore`)
         requiring store to flush data to disk. If ``False``, doesn't close the
         file after writing. The file should not be closed if the data needs to be
         accessed lazily after saving.
@@ -209,13 +210,15 @@ def file_writer(
     if not isinstance(write_dataset, bool):
         raise ValueError("`write_dataset` argument must a boolean.")
 
+    mode = "w" if write_dataset else "a"
+
     if isinstance(filename, MutableMapping):
         store = filename
     else:
-        store = zarr.storage.NestedDirectoryStore(
-            filename,
-        )
-    mode = "w" if write_dataset else "a"
+        if Version(zarr.__version__) < Version("3.0.0.a0"):
+            store = zarr.storage.NestedDirectoryStore(filename)
+        else:
+            store = zarr.storage.LocalStore(filename, mode="w")
 
     _logger.debug(f"File mode: {mode}")
     _logger.debug(f"Zarr store: {store}")
