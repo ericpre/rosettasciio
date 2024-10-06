@@ -54,6 +54,10 @@ jobs:
           - os: ubuntu
             os_version: latest
             PYTHON_VERSION: '3.11'
+          - os: ubuntu
+            os_version: latest
+            PYTHON_VERSION: '3.13.0-rc.3'
+            LABEL: '-minimum'
           - os: macos
             os_version: '13'
             PYTHON_VERSION: '3.11'
