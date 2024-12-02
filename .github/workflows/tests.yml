@@ -57,6 +57,9 @@ jobs:
           - os: macos
             os_version: '13'
             PYTHON_VERSION: '3.11'
+          - os: ubuntu
+            os_version: '13'
+            PYTHON_VERSION: '3.13t'
 
     steps:
       - uses: actions/checkout@v4
@@ -76,10 +79,17 @@ jobs:
           git fetch upstream --tags
 
       - uses: actions/setup-python@v5
+        if: ${{ ! contains(matrix.PYTHON_VERSION, '3.13t') }}
         name: Install Python
         with:
           python-version: ${{ matrix.PYTHON_VERSION }}
         
+      - uses: deadsnakes/action@v3
+        if: ${{ contains(matrix.PYTHON_VERSION, '3.13t') }}
+        with:
+          python-version: 3.13t
+          nogil: true
+
       - name: Get the number of CPUs
         id: cpus
         run: |
