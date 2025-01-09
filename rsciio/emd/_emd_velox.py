@@ -94,7 +94,7 @@ class FeiEMDReader(object):
         first_frame=0,
         last_frame=None,
         sum_frames=True,
-        sum_EDS_detectors=True,
+        sum_EDS_detectors=None,
         rebin_energy=1,
         SI_dtype=None,
         load_SI_image_stack=False,
@@ -577,9 +577,17 @@ class FeiEMDReader(object):
             stream = FeiSpectrumStream(spectrum_stream_group[key], self)
             return stream
 
+        if self.sum_EDS_detectors and len(subgroup_keys) == 1:
+            # Add warning to logger only when `sum_EDS_detectors` is set to True
+            # and there is only one stream in the file.
+            _logger.warning(
+                "The file contains only one spectrum stream. Use `sum_EDS_detectors=None` "
+                "(default) if only one stream is expected."
+            )
+        if self.sum_EDS_detectors is None:
+            # Default take the sum.
+            self.sum_EDS_detectors = True
         if self.sum_EDS_detectors:
-            if len(subgroup_keys) == 1:
-                _logger.warning("The file contains only one spectrum stream")
             # Read the first stream
             s0 = _read_stream(subgroup_keys[0])
             streams = [s0]

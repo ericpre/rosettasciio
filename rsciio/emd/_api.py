@@ -111,7 +111,7 @@ def file_reader(
     first_frame=0,
     last_frame=None,
     sum_frames=True,
-    sum_EDS_detectors=True,
+    sum_EDS_detectors=None,
     rebin_energy=1,
     SI_dtype=None,
     load_SI_image_stack=False,
@@ -146,11 +146,12 @@ def file_reader(
         Velox only: Load each individual EDS frame. The EDS spectrum image will
         be loaded with an extra navigation dimension corresponding to the frame
         index (time axis).
-    sum_EDS_detectors : bool, default=True
-        Velox only: Load the EDS signal as a sum over the signals from all EDS
-        detectors (default) or, alternatively, load the signal of each individual
-        EDS detector. In the latter case, a corresponding number of distinct
-        EDS signals is returned.
+    sum_EDS_detectors : bool or None, default=None
+        Velox only with multiple EDS stream: Load the EDS signal as a sum over
+        the signals from all EDS detectors (``True`` or ``None``) or, alternatively,
+        load the signal of each individual EDS detector. In the latter case, a
+        corresponding number of distinct EDS signals is returned. If ``True``
+        and only a single stream is present, a warning is added to the logger.
     rebin_energy : int, default=1
         Velox only: Rebin the energy axis by given factor. Useful in combination
         with ``sum_frames=False`` to reduce the data size when reading the
