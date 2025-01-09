@@ -174,14 +174,31 @@ def test_export_scalebar_different_scale_units(tmp_path):
     s = hs.signals.Signal2D(np.arange(pixels**2).reshape((pixels, pixels)))
     s.axes_manager[0].scale = 2
 
-    filename = tmp_path / "test_export_size.jpg"
+    filename = tmp_path / "test_export_different_scale.jpg"
     with pytest.raises(ValueError):
         s.save(filename, scalebar=True)
 
     s = hs.signals.Signal2D(np.arange(pixels**2).reshape((pixels, pixels)))
     s.axes_manager[0].units = "nm"
 
-    filename = tmp_path / "test_export_size.jpg"
+    filename = tmp_path / "test_export_different_units.jpg"
+    with pytest.raises(ValueError):
+        s.save(filename, scalebar=True)
+
+
+def test_export_scalebar_different_scale_precision(tmp_path):
+    hs = pytest.importorskip("hyperspy.api", reason="hyperspy not installed")
+    pixels = 16
+    s = hs.signals.Signal2D(np.arange(pixels**2).reshape((pixels, pixels)))
+    s.axes_manager[0].scale = 1.9999999999
+    s.axes_manager[1].scale = 2.0
+    filename = tmp_path / "test_export_scale_1e-11_difference.jpg"
+    # pass with 1E-11 relative difference
+    s.save(filename, scalebar=True)
+
+    filename = tmp_path / "test_export_scale_1e-10_difference.jpg"
+    s.axes_manager[0].scale = 1.999999999
+    # fails with 1E-10 relative difference
     with pytest.raises(ValueError):
         s.save(filename, scalebar=True)
 
