@@ -116,7 +116,7 @@ def test_non_valid_zspy(tmp_path, caplog):
     filename = tmp_path / "testfile.zspy"
     data = np.arange(10)
 
-    f = zarr.group(filename)
+    f = zarr.create_group(filename)
     f.create_dataset("dataset", data=data)
 
     with pytest.raises(IOError):

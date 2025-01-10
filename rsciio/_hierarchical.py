@@ -175,6 +175,7 @@ class HierarchicalReader:
         self.file = file
         # Getting version also check that this is a hyperspy format
         self.version = self.get_format_version()
+        # Used to check instance type in hspy and zSpy plugins
         self.Dataset = None
         self.Group = None
 
@@ -312,7 +313,7 @@ class HierarchicalReader:
 
         Parameters
         ----------
-        group : :py:class:`h5py.Group` or :py:class:`zarr.hierarchy.Group`
+        group : :py:class:`h5py.Group` or :py:class:`zarr.Group`
             A group following hspy specification.
         lazy : bool, optional
             Return the data as dask array. The default is False.
@@ -721,7 +722,7 @@ class HierarchicalWriter:
 
         Parameters
         ----------
-        group : :py:class:`zarr.hierarchy.Group` or :py:class:`h5py.Group`
+        group : :py:class:`zarr.Group` or :py:class:`h5py.Group`
             The group to write the data to.
         data : Array-like
             The data to be written.
@@ -738,7 +739,7 @@ class HierarchicalWriter:
         kwds : dict
             Any additional keywords for to be passed to the
             :py:meth:`h5py.Group.require_dataset` or
-            :py:meth:`zarr.hierarchy.Group.require_dataset` method.
+            :py:meth:`zarr.Group.require_dataset` method.
         """ % SHOW_PROGRESSBAR_DOC
         if chunks is None:
             if isinstance(data, da.Array):

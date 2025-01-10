@@ -195,7 +195,7 @@ def file_writer(
     %s
     **kwds
         The keyword arguments are passed to the
-        :py:meth:`zarr.hierarchy.Group.require_dataset` function.
+        :py:meth:`zarr.Group.require_dataset` function.
 
     Examples
     --------
