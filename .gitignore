@@ -2,6 +2,7 @@
 /build/*
 /dist/*
 /RosettaSciIO.egg-info/*
+/rosettasciio.egg-info/*
 *__pycache__*
 *test_compilers.o*
 *pyd

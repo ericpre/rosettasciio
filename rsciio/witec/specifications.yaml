@@ -1,0 +1,8 @@
+name: "WiTec"
+name_aliases: []
+description: "Read data from .wip files saved using WiTec's project software."
+full_support: False
+file_extensions: ["wip", "WIP"]
+default_extension: 0
+writes: False
+non_uniform_axis: False
