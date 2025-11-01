@@ -147,11 +147,12 @@ jobs:
           pip install hyperspy --no-deps
 
       - name: Install hyperspy and exspy (release)
-        if: ${{ matrix.HYPERSPY_VERSION == 'release'}}
+        if: ${{ matrix.HYPERSPY_VERSION == 'release' && matrix.PYTHON_VERSION != '3.14t'}}
         run: |
           pip install hyperspy exspy ${{ matrix.PIP_ARGS }}
 
       - name: Install hyperspy and exspy (dev)
+        if: ${{ matrix.HYPERSPY_VERSION == 'dev' && matrix.PYTHON_VERSION != '3.14t' }}
         run: |
           pip install git+https://github.com/hyperspy/hyperspy.git
           pip install git+https://github.com/hyperspy/exspy.git
