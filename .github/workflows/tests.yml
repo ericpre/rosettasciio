@@ -67,7 +67,7 @@ jobs:
             HYPERSPY_VERSION: 'release'
           - os: ubuntu
             os_version: latest
-            PYTHON_VERSION: '3.14t'
+            PYTHON_VERSION: '3.13t'
             LABEL: '-hyperspy-minimum'
             HYPERSPY_VERSION: 'dev'
 
@@ -130,29 +130,29 @@ jobs:
           echo "PYTHON_GIL=0" >> "$GITHUB_ENV"
 
       - name: Display GIL information
-        if: ${{ contains(matrix.PYTHON_VERSION, '3.14') }}
+        if: ${{ contains(matrix.PYTHON_VERSION, '3.13') }}
         run: |
           # show if free-threaded build
           python -VV
           # show if GIL is enable
           python -c "import sys; print('GIL enabled:', sys._is_gil_enabled())"
 
-      - name: Install hyperspy dependencies (3.14t)
-        if: ${{ matrix.PYTHON_VERSION == '3.14t'}}
+      - name: Install hyperspy dependencies (3.13t)
+        if: ${{ matrix.PYTHON_VERSION == '3.13t'}}
         run: |
           # no freethreaded build available for h5py
           # install other dependencies manually 
-          pip install cloudpickle dask[array] importlib-metadata jinja2 matplotlib natsort numpy packaging pint prettytable pyyaml scipy sympy tqdm pooch requests
+          pip install cloudpickle dask[array] importlib-metadata jinja2 matplotlib natsort numpy packaging pint prettytable pyyaml scikit-image scipy sympy tqdm pooch requests
           pip install traits
           pip install hyperspy --no-deps
 
       - name: Install hyperspy and exspy (release)
-        if: ${{ matrix.HYPERSPY_VERSION == 'release' && matrix.PYTHON_VERSION != '3.14t'}}
+        if: ${{ matrix.HYPERSPY_VERSION == 'release' && matrix.PYTHON_VERSION != '3.13t'}}
         run: |
           pip install hyperspy exspy ${{ matrix.PIP_ARGS }}
 
       - name: Install hyperspy and exspy (dev)
-        if: ${{ matrix.HYPERSPY_VERSION == 'dev' && matrix.PYTHON_VERSION != '3.14t' }}
+        if: ${{ matrix.HYPERSPY_VERSION == 'dev' && matrix.PYTHON_VERSION != '3.13t' }}
         run: |
           pip install git+https://github.com/hyperspy/hyperspy.git
           pip install git+https://github.com/hyperspy/exspy.git
