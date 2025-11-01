@@ -68,7 +68,7 @@ jobs:
           - os: ubuntu
             os_version: latest
             PYTHON_VERSION: '3.14t'
-            LABEL: '-hyperspy_dev-minimum'
+            LABEL: '-hyperspy-minimum'
             HYPERSPY_VERSION: 'dev'
 
     steps:
@@ -143,7 +143,8 @@ jobs:
           # no freethreaded build available for h5py
           # install other dependencies manually 
           pip install cloudpickle dask[array] importlib-metadata jinja2 matplotlib natsort numpy packaging pint prettytable pyyaml scipy sympy tqdm pooch requests
-          pip install traits ${{ matrix.PIP_ARGS }}
+          pip install traits
+          pip install hyperspy --no-deps
 
       - name: Install hyperspy and exspy (release)
         if: ${{ matrix.HYPERSPY_VERSION == 'release'}}
@@ -151,15 +152,9 @@ jobs:
           pip install hyperspy exspy ${{ matrix.PIP_ARGS }}
 
       - name: Install hyperspy and exspy (dev)
-        if: ${{ matrix.HYPERSPY_VERSION == 'dev' && matrix.PYTHON_VERSION != '3.14t'}}
         run: |
           pip install git+https://github.com/hyperspy/hyperspy.git
           pip install git+https://github.com/hyperspy/exspy.git
-
-      - name: Install hyperspy (dev & 3.14t)
-        if: ${{ matrix.HYPERSPY_VERSION == 'dev' && matrix.PYTHON_VERSION == '3.14t'}}
-        run: |
-          pip install git+https://github.com/hyperspy/hyperspy.git --no-deps
 
       - name: Install python-mrcz dev
         # for numpy 2.0 support for python >= 3.9
