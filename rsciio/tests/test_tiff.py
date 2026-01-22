@@ -1155,3 +1155,12 @@ class TestReadHamamatsu:
             s = hs.load(fname)
 
         assert s.metadata.Signal.signal_type == "TransientSpectrum"
+
+
+def test_save_nav_dim2_sig_dim0(tmp_path):
+    # Test saving and loading a 2D signal with 2 navigation dimensions
+    # and 0 signal dimensions
+    s = hs.signals.Signal2D(np.arange(3 * 4).reshape((3, 4))).T
+    s.save(tmp_path / "nav2_sig0.tif")
+    s1 = hs.load(tmp_path / "nav2_sig0.tif")
+    _compare_signal_shape_data(s, s1)
