@@ -16,16 +16,25 @@
 # You should have received a copy of the GNU General Public License
 # along with RosettaSciIO. If not, see <https://www.gnu.org/licenses/#GPL>.
 
-"""Reader for Balzers/Pfeiffer Quadstar SAC binary files.
+"""Reader for Balzers/Pfeiffer Quadstar SAC and SBC binary files.
 
-The SAC file format stores mass spectrometry scan data produced by the
-Quadstar software (versions 4.x and later). Each file contains a general
+The SAC file format stores mass spectrometry scan analog data produced by
+the Quadstar software (versions 4.x and later). Each file contains a general
 header, one or more trace definitions (channels), and timestamped scan
 data for each trace across multiple measurement cycles.
 
 The binary format was reverse-engineered with the help of the
 `sac2dat <https://www.bubek.org/sac2dat.php>`_ tool by Dr. Moritz Bubek
 and the `yadg <https://github.com/dgbowl/yadg>`_ project by Nicolas Vetsch.
+
+The SBC file format stores mass spectrometry scan bargraph data produced by
+the Quadstar software (versions 4.x and later). Each file contains a general
+header but, unlike the SAC format, it does not contain trace definitions.
+In Scan Bargraph mode, only the maximum peak intensities and the corresponding
+mass numbers are collected. This is done by the peak detection (Peak-L and Peak-F)
+integrated in the QMS. The data block starts at offset 0x65E and consists of
+interleaved (mass label, intensity) float32 pairs for each cycle.
+
 """
 
 import datetime
@@ -149,35 +158,26 @@ def _build_datetime(header):
 
 
 # ===========================================================================
-# Public API
+# SAC reader
 # ===========================================================================
 
 
-def file_reader(filename, lazy=False):
-    """
-    Read mass spectrometry data from a Balzers/Pfeiffer Quadstar SAC file.
-
-    Each trace (channel) in the file is returned as a separate signal
-    dictionary.  The signal axis corresponds to the mass-to-charge ratio
-    (M/Z) and the navigation axis represents sequential measurement
-    cycles (timesteps).  When only a single timestep is present the data
-    is returned as a 1-D spectrum.
+def _read_sac_file(filename, buf, gen, base_datetime):
+    """Read mass spectrometry data from a Quadstar SAC (Scan Analog) buffer.
 
     Parameters
     ----------
-    %s
-    %s
+    filename : str or Path
+        Original file path (for metadata).
+    buf : bytes
+        Full file contents.
+    gen : dict
+        Parsed general header.
+    base_datetime : datetime.datetime or None
+        Measurement start time.
 
-    %s
+    Returns a list of signal dictionaries, one per trace.
     """
-    if lazy:
-        raise NotImplementedError("Lazy loading is not supported for SAC files.")
-
-    with open(filename, "rb") as f:
-        buf = f.read()
-
-    # ---- General header ---------------------------------------------------
-    gen = _read_general_header(buf)
     n_timesteps = gen["n_timesteps"]
     n_traces = gen["n_traces"]
     timestep_length = gen["timestep_length"]
@@ -200,10 +200,8 @@ def file_reader(filename, lazy=False):
     uts_base_s = struct.unpack_from("<I", buf, 0xC2)[0]
     # Tenths of milliseconds, convert to milliseconds.
     uts_base_ms = struct.unpack_from("<H", buf, 0xC6)[0] * 0.1
-    base_datetime = _build_datetime(gen)
 
     # ---- Read all timesteps and traces ------------------------------------
-    # Collect data per trace index, since each trace may span many timesteps.
     trace_data = {}  # trace_index -> list of 1-D arrays (one per timestep)
     trace_timestamps = {}  # trace_index -> list of float (unix timestamps)
     trace_infos = {}  # trace_index -> info dict (same across timesteps)
@@ -247,7 +245,6 @@ def file_reader(filename, lazy=False):
 
     # ---- Build rosettasciio signal dictionaries ---------------------------
     signals = []
-    measurement_date = base_datetime
 
     for ti in sorted(trace_data.keys()):
         info = trace_infos[ti]
@@ -324,9 +321,9 @@ def file_reader(filename, lazy=False):
                 "quantity": f"{y_title} ({y_unit})" if y_title else "Intensity",
             },
         }
-        if measurement_date is not None:
-            metadata["General"]["date"] = measurement_date.date().isoformat()
-            metadata["General"]["time"] = measurement_date.time().isoformat()
+        if base_datetime is not None:
+            metadata["General"]["date"] = base_datetime.date().isoformat()
+            metadata["General"]["time"] = base_datetime.time().isoformat()
         if comment:
             metadata["General"]["notes"] = comment
 
@@ -343,6 +340,179 @@ def file_reader(filename, lazy=False):
         raise ValueError("No data traces could be read from the SAC file.")
 
     return signals
+
+
+# ===========================================================================
+# SBC reader
+# ===========================================================================
+
+# Offset where the interleaved mass/intensity data begins in SBC files.
+_SBC_DATA_START = 0x65E
+
+
+def _read_sbc_file(filename, buf, gen, base_datetime):
+    """Read mass spectrometry data from a Quadstar SBC (Scan Bargraph) buffer.
+
+    Parameters
+    ----------
+    filename : str or Path
+        Original file path (for metadata).
+    buf : bytes
+        Full file contents.
+    gen : dict
+        Parsed general header.
+    base_datetime : datetime.datetime or None
+        Measurement start time.
+
+    Returns a list containing a single signal dictionary.
+    """
+    file_size = len(buf)
+    num_cycles = gen["n_timesteps"]
+
+    # Number of masses: scan width stored as u16 at offset 0xCB, plus one.
+    width = struct.unpack_from("<H", buf, 0xCB)[0]
+    num_masses = width + 1
+
+    # Stride: bytes per cycle in the data block.
+    stride = (file_size - _SBC_DATA_START) // num_cycles
+
+    # This is not working, it may be that there is some additional header or padding in the data block
+    # that we haven't accounted for. For now, we'll hardcode the stride based on observed files.
+    # `_SBC_DATA_START` could be wrong as well.
+
+    # TODO: The stride should be inferred from the data block size and number of cycles, not hardcoded.
+    stride = 1613
+
+    _logger.debug(
+        "SBC header: %d cycles, %d masses, stride=%d",
+        num_cycles,
+        num_masses,
+        stride,
+    )
+
+    data_buf = buf[_SBC_DATA_START:]
+
+    # Extract mass labels from the first cycle.
+    # Data is interleaved as [mass1, int1, mass2, int2, …] in float32.
+    first_cycle = data_buf[: num_masses * 8]
+    masses = np.frombuffer(first_cycle, dtype="<f4")[0::2].copy()
+
+    # Extract intensities for all cycles.
+    intensities = np.empty((num_cycles, num_masses), dtype=np.float32)
+    for i in range(num_cycles):
+        start = i * stride
+        cycle_buf = data_buf[start : start + num_masses * 8]
+        intensities[i, :] = np.frombuffer(cycle_buf, dtype="<f4")[1::2]
+
+    # ---- Build signal dictionary ------------------------------------------
+    first_mass = float(masses[0])
+    last_mass = float(masses[-1])
+    mz_scale = (last_mass - first_mass) / (num_masses - 1) if num_masses > 1 else 1.0
+
+    signal_axis = {
+        "name": "Mass-to-charge ratio",
+        "units": "m/z",
+        "offset": first_mass,
+        "scale": mz_scale,
+        "size": num_masses,
+        "navigate": False,
+    }
+
+    axes = []
+    if num_cycles > 1:
+        axes.append(
+            {
+                "name": "Time",
+                "units": "",
+                "offset": 0,
+                "scale": 1.0,
+                "size": num_cycles,
+                "navigate": True,
+                "index_in_array": 0,
+            }
+        )
+        signal_axis["index_in_array"] = 1
+        data = intensities
+    else:
+        signal_axis["index_in_array"] = 0
+        data = intensities[0]
+
+    axes.append(signal_axis)
+
+    original_metadata = {
+        "general_header": {
+            k: _decode_bytes(v) if isinstance(v, bytes) else v for k, v in gen.items()
+        },
+        "sbc_parameters": {
+            "num_masses": num_masses,
+            "stride": stride,
+            "data_start": _SBC_DATA_START,
+            "masses": masses.tolist(),
+        },
+    }
+
+    metadata = {
+        "General": {
+            "original_filename": str(filename),
+        },
+        "Signal": {
+            "signal_type": "MS",
+            "quantity": "Intensity",
+        },
+    }
+    if base_datetime is not None:
+        metadata["General"]["date"] = base_datetime.date().isoformat()
+        metadata["General"]["time"] = base_datetime.time().isoformat()
+
+    return [
+        {
+            "data": data,
+            "axes": axes,
+            "metadata": metadata,
+            "original_metadata": original_metadata,
+        }
+    ]
+
+
+# ===========================================================================
+# Public API
+# ===========================================================================
+
+
+def file_reader(filename, lazy=False):
+    """
+    Read mass spectrometry data from a Balzers/Pfeiffer Quadstar SAC or
+    SBC file.
+
+    For SAC files, each trace (channel) is returned as a separate signal
+    dictionary.  For SBC files, a single signal dictionary is returned
+    containing the scan bargraph intensities.
+
+    The signal axis corresponds to the mass-to-charge ratio (M/Z) and
+    the navigation axis represents sequential measurement cycles
+    (timesteps).  When only a single timestep is present the data is
+    returned as a 1-D spectrum.
+
+    Parameters
+    ----------
+    %s
+    %s
+
+    %s
+    """
+    if lazy:
+        raise NotImplementedError("Lazy loading is not supported.")
+
+    with open(filename, "rb") as f:
+        buf = f.read()
+
+    gen = _read_general_header(buf)
+    base_datetime = _build_datetime(gen)
+
+    if str(filename).lower().endswith(".sbc"):
+        return _read_sbc_file(filename, buf, gen, base_datetime)
+
+    return _read_sac_file(filename, buf, gen, base_datetime)
 
 
 file_reader.__doc__ %= (

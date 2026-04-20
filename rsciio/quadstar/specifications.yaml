@@ -3,11 +3,13 @@ name_aliases:
   - "quadstar"
   - "Quadstar_sac"
 description: >
-  Read mass spectrometry data from Balzers/Pfeiffer Quadstar SAC binary files.
+  Read mass spectrometry data from Balzers/Pfeiffer Quadstar SAC and SBC binary files.
 full_support: False
 file_extensions:
   - sac
   - SAC
+  - sbc
+  - SBC
 default_extension: 0
 non_uniform_axis: False
 writes: False
