@@ -43,7 +43,6 @@ from rsciio.utils._date_time import (
 )
 from rsciio.utils._deprecated import endianess_keyword_deprecation
 from rsciio.utils._dictionary import DTBox
-from rsciio.utils._skimage_exposure import rescale_intensity
 
 _logger = logging.getLogger(__name__)
 
@@ -461,6 +460,8 @@ def file_writer(
         else:
             raise ValueError("The `navigator` argument is expected to be array-like")
         if intensity_scaling is not None:
+            from skimage.exposure import rescale_intensity
+
             navigator = rescale_intensity(
                 navigator, in_range=original_scale, out_range=np.uint8
             )
@@ -474,6 +475,8 @@ def file_writer(
         file_location = f.tell()
 
     if intensity_scaling is not None:
+        from skimage.exposure import rescale_intensity
+
         array_data = rescale_intensity(
             signal["data"],
             in_range=original_scale,
