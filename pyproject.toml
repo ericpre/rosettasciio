@@ -12,11 +12,11 @@ classifiers = [
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Free Threading :: 1 - Unstable",
   "Topic :: Scientific/Engineering",
   "Topic :: Scientific/Engineering :: Physics",
@@ -157,7 +157,7 @@ check-filenames = true
 check-hidden = false
 
 [tool.cibuildwheel]
-build = ["cp310-*", "cp311-*", "cp312-*", "cp313-*", "cp314-*", "cp314t-*"]
+build = ["cp311-*", "cp312-*", "cp313-*", "cp314-*", "cp314t-*", "cp315-*", "cp315t-*"]
 # No need to build wheels for pypy because the pure python wheels can be used
 # PyPy documentation recommends no to build the C extension
 skip = ["*-musllinux*", "*-win32", "*-manylinux_i686"]
