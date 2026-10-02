@@ -89,14 +89,14 @@ license-files = ["COPYING.txt"]
 "Source" = "https://github.com/hyperspy/rosettasciio"
 
 [project.optional-dependencies]
-app5 = ["h5py>=3.7"]
-arina = ["h5py>=3.7", "hdf5plugin"]
+app5 = ["h5py>=3.8.0"]
+arina = ["h5py>=3.8.0", "hdf5plugin"]
 blockfile = ["scikit-image>=0.21.0"]
 eds-stream = ["sparse"]
-hdf5 = ["h5py>=3.7"]
+hdf5 = ["h5py>=3.8.0"]
 image = [
   "imageio>=2.27", # For scikit-image
-  "pillow>=9.0.1"
+  "pillow>=9.2.0"
 ]
 mrcz = ["mrcz>=0.6.0"]  # support for numpy 2.0
 scalebar_export = ["matplotlib-scalebar", "matplotlib>=3.6"]
@@ -105,7 +105,7 @@ tiff = [
   "tifffile>=2022.8.12,!=2026.2.24", # For scikit-image
   "imagecodecs"
 ]
-tofwerk = ["h5py>=3.7"]
+tofwerk = ["h5py>=3.8.0"]
 usid = ["pyUSID>=0.0.11"]
 zspy = ["zarr>=2,<3", "msgpack"]
 tests = [
